@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JasaDekat — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#F4762A; --orange-dark:#C85A1A; --orange-100:#FFE9DA;
+  --teal:#0F9B8E; --teal-100:#DFF4F1;
+  --bg:#FAFAF8; --surface:#FFFFFF; --ink:#1C1B1A; --muted:#6B6B68; --line:#ECE9E4;
+  --success:#2E9B5A; --success-bg:#E4F5EA;
+  --warning:#E0A72E; --warning-bg:#FDF2DD;
+  --info:#3A7BD5; --info-bg:#E7EFFC;
+  --danger:#D6455B; --danger-bg:#FBE7EA;
+  --r:16px; --shadow:0 2px 10px rgba(28,27,26,.06), 0 1px 2px rgba(28,27,26,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EDEAE3;font-family:Inter,sans-serif;color:var(--ink);
+  display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:32px 16px;}
+h1,h2,h3,.brand,button{font-family:Poppins,sans-serif}
+.frame{width:375px;height:812px;background:var(--bg);border-radius:36px;overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);position:relative;display:flex;flex-direction:column;border:8px solid #16151A;}
+.label{position:absolute;top:-26px;left:8px;font-size:12px;color:#8a8a86;font-family:Poppins;}
+.wrap{position:relative}
+.screen{flex:1;overflow-y:auto;display:none;flex-direction:column;-webkit-overflow-scrolling:touch;}
+.screen.active{display:flex}
+.status{height:26px;flex-shrink:0}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg);position:sticky;top:0;z-index:5;}
+.topbar .back{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+.topbar .title{font-weight:600;font-size:16px}
+.pad{padding:0 18px}
+.btn{border:none;border-radius:12px;padding:14px 20px;font-weight:600;font-size:14.5px;cursor:pointer;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:8px;font-family:Poppins;transition:transform .12s ease;}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--orange);color:#fff;}
+.btn-outline{background:transparent;color:var(--orange);border:1.5px solid var(--orange);}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.field{margin-bottom:14px}
+.field label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;font-weight:500}
+.field input,.field textarea{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);
+  font-size:14.5px;font-family:Inter;background:var(--surface);outline:none;}
+.field input:focus,.field textarea:focus{border-color:var(--orange);}
+.field.error input{border-color:var(--danger)}
+.field .err{color:var(--danger);font-size:12px;margin-top:5px}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;}
+.stars{color:var(--warning);font-size:13px;letter-spacing:1px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:20px;font-family:Poppins}
+.b-pending{background:var(--warning-bg);color:#9a6b0f}
+.b-accepted{background:var(--info-bg);color:#2b5ea8}
+.b-progress{background:var(--orange-100);color:var(--orange-dark)}
+.b-completed{background:var(--success-bg);color:#1f7a44}
+.b-cancelled{background:var(--danger-bg);color:#a52f42}
+.avatar{border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--teal));display:flex;align-items:center;
+  justify-content:center;color:#fff;font-weight:600;font-family:Poppins;flex-shrink:0}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:9px 14px;font-size:13px;
+  font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer}
+.chip.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--line);
+  border-radius:14px;padding:12px 14px;font-size:14px;color:var(--muted)}
+.bottomnav{display:flex;justify-content:space-around;align-items:center;background:var(--surface);
+  border-top:1px solid var(--line);padding:10px 4px calc(10px + env(safe-area-inset-bottom,0px));position:sticky;bottom:0;z-index:5}
+.navitem{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);
+  cursor:pointer;font-weight:500;width:60px}
+.navitem.active{color:var(--orange)}
+.navitem .ic{font-size:19px}
+.svc-card{display:flex;gap:12px;cursor:pointer}
+.svc-thumb{width:76px;height:76px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px}
+.hcard{width:168px;flex-shrink:0;cursor:pointer}
+.hthumb{width:100%;height:100px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px}
+.hscroll{display:flex;gap:12px;overflow-x:auto;padding:2px 18px 4px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 18px 10px}
+.section-title h3{margin:0;font-size:15px}
+.section-title span{font-size:12.5px;color:var(--orange);font-weight:600;cursor:pointer}
+.stepper{display:flex;padding:20px 18px 4px}
+.step{flex:1;text-align:center;position:relative}
+.step .dot{width:26px;height:26px;border-radius:50%;background:var(--line);color:#fff;display:flex;align-items:center;
+  justify-content:center;margin:0 auto 6px;font-size:12px;font-weight:700;font-family:Poppins}
+.step.done .dot{background:var(--teal)}
+.step.now .dot{background:var(--orange)}
+.step .lbl{font-size:10.5px;color:var(--muted)}
+.step.done .lbl,.step.now .lbl{color:var(--ink);font-weight:600}
+.step:not(:last-child)::after{content:'';position:absolute;top:13px;left:60%;width:80%;height:2px;background:var(--line);z-index:-1}
+.step.done:not(:last-child)::after{background:var(--teal)}
+.msg-row{display:flex;margin-bottom:10px}
+.msg-row.me{justify-content:flex-end}
+.bubble{max-width:70%;padding:10px 13px;border-radius:16px;font-size:13.5px;line-height:1.4}
+.msg-row:not(.me) .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg-row.me .bubble{background:var(--orange);color:#fff;border-bottom-right-radius:4px}
+.msg-time{font-size:10px;color:var(--muted);margin-top:3px}
+.star-input{display:flex;gap:8px;font-size:32px;color:var(--line);justify-content:center;margin:18px 0}
+.star-input span{cursor:pointer}
+.star-input span.on{color:var(--warning)}
+.role-pick{display:flex;gap:10px}
+.role-card{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}
+.role-card.sel{border-color:var(--orange);background:var(--orange-100)}
+.review-item{padding:12px 0;border-bottom:1px solid var(--line)}
+.muted{color:var(--muted)}
+.mb-0{margin-bottom:0}
+.rowbetween{display:flex;justify-content:space-between;align-items:center}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:4px 18px}
+.cat-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.cat-ic{width:52px;height:52px;border-radius:16px;background:var(--teal-100);display:flex;align-items:center;justify-content:center;font-size:22px}
+.cat-item span{font-size:10.5px;text-align:center;color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- ================= FRAME 1: AUTH ================= -->
+<div class="wrap"><div class="label">01 · Auth</div>
+<div class="frame">
+  <div class="status"></div>
+  <!-- LOGIN -->
+  <div class="screen active" id="s-login">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 26px">
+      <div style="width:56px;height:56px;border-radius:16px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px">📍</div>
+      <h1 style="font-size:24px;margin:0 0 4px">Masuk ke JasaDekat</h1>
+      <p class="muted" style="margin:0 0 26px;font-size:14px">Temukan jasa terpercaya di sekitarmu.</p>
+      <div class="field"><label>Email</label><input type="email" value="rani@gmail.com"></div>
+      <div class="field error"><label>Kata sandi</label><input type="password" value="12345">
+        <div class="err">Kata sandi minimal 8 karakter</div></div>
+      <div style="text-align:right;margin-bottom:18px"><span onclick="go('s-reset')" style="color:var(--orange);font-size:13px;font-weight:600;cursor:pointer">Lupa kata sandi?</span></div>
+      <button class="btn btn-primary" onclick="go('s-home')">Masuk</button>
+      <p style="text-align:center;font-size:13px;margin-top:18px" class="muted">Belum punya akun? <span onclick="go('s-register')" style="color:var(--orange);font-weight:600;cursor:pointer">Daftar</span></p>
+    </div>
+  </div>
+  <!-- REGISTER -->
+  <div class="screen" id="s-register">
+    <div class="topbar"><div class="back" onclick="go('s-login')">←</div><div class="title">Buat akun</div></div>
+    <div class="pad" style="padding-top:6px">
+      <label style="font-size:13px;color:var(--muted);font-weight:500">Daftar sebagai</label>
+      <div class="role-pick" style="margin:8px 0 18px">
+        <div class="role-card sel" onclick="pickRole(this)"><div style="font-size:22px">🙋</div><b style="font-size:13px">Pelanggan</b><div class="muted" style="font-size:11px">Cari jasa</div></div>
+        <div class="role-card" onclick="pickRole(this)"><div style="font-size:22px">🛠️</div><b style="font-size:13px">Penyedia Jasa</b><div class="muted" style="font-size:11px">Tawarkan jasa</div></div>
+      </div>
+      <div class="field"><label>Nama lengkap</label><input value="Rani Puspita"></div>
+      <div class="field"><label>Email</label><input value="rani@gmail.com"></div>
+      <div class="field"><label>Kata sandi</label><input type="password" value="••••••••"></div>
+      <button class="btn btn-primary" onclick="go('s-home')">Daftar</button>
+    </div>
+  </div>
+  <!-- RESET -->
+  <div class="screen" id="s-reset">
+    <div class="topbar"><div class="back" onclick="go('s-login')">←</div><div class="title">Atur ulang kata sandi</div></div>
+    <div class="pad">
+      <p class="muted" style="font-size:13.5px">Masukkan email akunmu, kami kirim tautan atur ulang kata sandi.</p>
+      <div class="field"><label>Email</label><input value="rani@gmail.com"></div>
+      <button class="btn btn-primary" onclick="go('s-login')">Kirim tautan</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- ================= FRAME 2: HOME & SEARCH ================= -->
+<div class="wrap"><div class="label">02 · Home & Search</div>
+<div class="frame">
+  <div class="status"></div>
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="pad" style="padding-top:16px">
+      <div class="rowbetween" style="margin-bottom:14px">
+        <div><div class="muted" style="font-size:12px">Lokasi kamu</div><b style="font-size:14px">📍 Serpong, Tangerang</b></div>
+        <div class="avatar" style="width:38px;height:38px;font-size:13px" onclick="go('s-profile')">RP</div>
+      </div>
+      <div class="searchbar" onclick="go('s-search')">🔍 Cari tukang AC, guru les, fotografer…</div>
+    </div>
+    <div class="section-title"><h3>Kategori</h3></div>
+    <div class="category-grid">
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">📚</div><span>Pendidikan</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">💻</div><span>Teknologi</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">🎨</div><span>Desain</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">📷</div><span>Foto&Video</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">🏠</div><span>Rumah Tangga</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">🔧</div><span>Reparasi</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">🎉</div><span>Event</span></div>
+      <div class="cat-item" onclick="go('s-search')"><div class="cat-ic">💼</div><span>Freelance</span></div>
+    </div>
+    <div class="section-title"><h3>Jasa di sekitarmu</h3><span onclick="go('s-search')">Lihat semua</span></div>
+    <div class="hscroll">
+      <div class="hcard" onclick="go('s-detail')"><div class="hthumb" style="background:var(--orange-100)">🔧</div>
+        <b style="font-size:13px">Servis AC Rumah</b><div class="muted" style="font-size:11.5px">Budi Teknik</div>
+        <div class="rowbetween" style="margin-top:4px"><span class="stars">★★★★★</span><span style="font-size:11px" class="muted">1.2 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp75rb</b></div>
+      <div class="hcard" onclick="go('s-detail')"><div class="hthumb" style="background:var(--teal-100)">📷</div>
+        <b style="font-size:13px">Foto Produk UMKM</b><div class="muted" style="font-size:11.5px">Studio Cahaya</div>
+        <div class="rowbetween" style="margin-top:4px"><span class="stars">★★★★☆</span><span style="font-size:11px" class="muted">2.4 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp250rb</b></div>
+      <div class="hcard" onclick="go('s-detail')"><div class="hthumb" style="background:var(--orange-100)">📚</div>
+        <b style="font-size:13px">Les Matematika</b><div class="muted" style="font-size:11.5px">Kak Dimas</div>
+        <div class="rowbetween" style="margin-top:4px"><span class="stars">★★★★★</span><span style="font-size:11px" class="muted">0.8 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp60rb/jam</b></div>
+    </div>
+    <div style="height:14px"></div>
+    <div id="nav-home"></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="screen" id="s-search">
+    <div class="pad" style="padding-top:14px">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div class="searchbar" style="flex:1">🔍 tukang AC</div>
+        <div class="chip" onclick="go('s-filter')" style="cursor:pointer">⚙️</div>
+      </div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px">
+        <div class="chip active">Terdekat</div><div class="chip">Rating tertinggi</div><div class="chip">Terlaris</div><div class="chip">Harga</div>
+      </div>
+    </div>
+    <div style="padding:6px 18px;display:flex;flex-direction:column;gap:12px">
+      <div class="card svc-card" onclick="go('s-detail')">
+        <div class="svc-thumb" style="background:var(--orange-100)">🔧</div>
+        <div style="flex:1"><b style="font-size:13.5px">Servis AC Rumah</b><div class="muted" style="font-size:11.5px;margin:2px 0">Budi Teknik</div>
+        <div class="rowbetween"><span class="stars">★★★★★ <span class="muted" style="font-size:11px">(128)</span></span><span class="muted" style="font-size:11px">1.2 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp75rb – 150rb</b></div>
+      </div>
+      <div class="card svc-card" onclick="go('s-detail')">
+        <div class="svc-thumb" style="background:var(--teal-100)">🔧</div>
+        <div style="flex:1"><b style="font-size:13.5px">Instalasi & Cuci AC</b><div class="muted" style="font-size:11.5px;margin:2px 0">Segar Teknik</div>
+        <div class="rowbetween"><span class="stars">★★★★☆ <span class="muted" style="font-size:11px">(84)</span></span><span class="muted" style="font-size:11px">2.1 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp100rb</b></div>
+      </div>
+      <div class="card svc-card" onclick="go('s-detail')">
+        <div class="svc-thumb" style="background:var(--orange-100)">🔧</div>
+        <div style="flex:1"><b style="font-size:13.5px">Bongkar Pasang AC</b><div class="muted" style="font-size:11.5px;margin:2px 0">Jaya Dingin</div>
+        <div class="rowbetween"><span class="stars">★★★★★ <span class="muted" style="font-size:11px">(52)</span></span><span class="muted" style="font-size:11px">3.0 km</span></div>
+        <b style="font-size:13px;color:var(--orange-dark)">Rp180rb</b></div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="nav-search"></div>
+  </div>
+
+  <!-- FILTER SHEET -->
+  <div class="screen" id="s-filter" style="justify-content:flex-end">
+    <div style="flex:1" onclick="go('s-search')"></div>
+    <div class="card" style="border-radius:20px 20px 0 0;box-shadow:none;padding:20px 18px 28px">
+      <div style="width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px"></div>
+      <h3 style="margin:0 0 14px">Filter</h3>
+      <label style="font-size:13px;font-weight:600">Kategori</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
+        <div class="chip active">Reparasi</div><div class="chip">Teknologi</div><div class="chip">Desain</div>
+      </div>
+      <label style="font-size:13px;font-weight:600">Radius lokasi</label>
+      <input type="range" style="width:100%;margin:10px 0 16px;accent-color:var(--orange)">
+      <label style="font-size:13px;font-weight:600">Rentang harga</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px"><input placeholder="Min" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line)"><input placeholder="Maks" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line)"></div>
+      <label style="font-size:13px;font-weight:600">Rating minimal</label>
+      <div class="stars" style="font-size:20px;margin:8px 0 18px">★★★★☆</div>
+      <div style="display:flex;gap:10px"><button class="btn btn-ghost" onclick="go('s-search')">Reset</button><button class="btn btn-primary" onclick="go('s-search')">Terapkan</button></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ================= FRAME 3: SERVICE & BOOKING ================= -->
+<div class="wrap"><div class="label">03 · Service & Booking</div>
+<div class="frame">
+  <div class="status"></div>
+  <!-- DETAIL -->
+  <div class="screen active" id="s-detail" style="position:relative">
+    <div class="topbar" style="position:absolute;background:transparent;width:100%"><div class="back" style="background:#fff">←</div></div>
+    <div style="height:200px;background:linear-gradient(135deg,var(--orange),#ffb27a);display:flex;align-items:center;justify-content:center;font-size:56px">🔧</div>
+    <div class="pad" style="padding-top:16px;flex:1">
+      <div class="rowbetween"><h2 style="margin:0;font-size:19px">Servis AC Rumah</h2><b style="color:var(--orange-dark)">Rp75rb–150rb</b></div>
+      <div class="muted" style="font-size:12.5px;margin:4px 0 14px">⏱ 1–2 jam pengerjaan</div>
+      <div class="card" style="display:flex;align-items:center;gap:12px" onclick="go('s-provider')">
+        <div class="avatar" style="width:44px;height:44px">BT</div>
+        <div style="flex:1"><b style="font-size:13.5px">Budi Teknik</b><div class="stars" style="font-size:11.5px">★★★★★ <span class="muted">(128 · 340 selesai)</span></div></div>
+        <span style="color:var(--orange);font-size:12px;font-weight:600">Lihat profil</span>
+      </div>
+      <div class="divider"></div>
+      <h3 style="font-size:14.5px;margin:0 0 8px">Deskripsi</h3>
+      <p style="font-size:13.5px;line-height:1.6;color:var(--ink);margin:0 0 16px">Cuci AC, isi ulang freon, dan pengecekan kebocoran. Cocok untuk unit split 1–2 PK, termasuk pembersihan filter dan evaporator.</p>
+      <h3 style="font-size:14.5px;margin:0 0 8px">Portofolio</h3>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="width:80px;height:80px;border-radius:10px;background:var(--orange-100);display:flex;align-items:center;justify-content:center">🖼️</div>
+        <div style="width:80px;height:80px;border-radius:10px;background:var(--teal-100);display:flex;align-items:center;justify-content:center">🖼️</div>
+        <div style="width:80px;height:80px;border-radius:10px;background:var(--orange-100);display:flex;align-items:center;justify-content:center">🖼️</div>
+      </div>
+      <div class="rowbetween"><h3 style="font-size:14.5px;margin:0">Ulasan (128)</h3><span class="stars">★★★★★ 4.9</span></div>
+      <div class="review-item"><div class="rowbetween mb-0"><b style="font-size:13px">Sinta W.</b><span class="stars" style="font-size:11px">★★★★★</span></div><p style="font-size:12.5px;margin:4px 0 0;color:var(--muted)">Cepat, rapi, dan AC jadi dingin lagi. Recommended!</p></div>
+      <div class="review-item"><div class="rowbetween mb-0"><b style="font-size:13px">Andre P.</b><span class="stars" style="font-size:11px">★★★★☆</span></div><p style="font-size:12.5px;margin:4px 0 0;color:var(--muted)">Datang tepat waktu, harga sesuai kesepakatan.</p></div>
+    </div>
+    <div style="padding:14px 18px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:10px">
+      <button class="btn btn-outline" style="width:auto;padding:14px 18px" onclick="go('s-chatroom')">💬</button>
+      <button class="btn btn-primary" onclick="go('s-booking')">Ajukan Booking</button>
+    </div>
+  </div>
+
+  <!-- PROVIDER PROFILE -->
+  <div class="screen" id="s-provider">
+    <div style="height:110px;background:linear-gradient(135deg,var(--teal),#6fd6c9)"></div>
+    <div class="pad" style="margin-top:-34px">
+      <div class="avatar" style="width:68px;height:68px;font-size:22px;border:4px solid var(--bg)">BT</div>
+      <h2 style="margin:10px 0 2px;font-size:18px">Budi Teknik</h2>
+      <div class="muted" style="font-size:12.5px;margin-bottom:10px">📍 Melayani area Serpong & sekitar, 3km</div>
+      <p style="font-size:13px;line-height:1.5;margin:0 0 14px">Teknisi AC bersertifikat, 8 tahun pengalaman servis rumah & kantor.</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div class="card" style="flex:1;text-align:center;padding:10px"><b style="font-size:16px">4.9★</b><div class="muted" style="font-size:11px">128 ulasan</div></div>
+        <div class="card" style="flex:1;text-align:center;padding:10px"><b style="font-size:16px">340</b><div class="muted" style="font-size:11px">selesai</div></div>
+      </div>
+      <h3 style="font-size:14px;margin:0 0 8px">Layanan aktif</h3>
+      <div class="card svc-card" style="margin-bottom:10px" onclick="go('s-detail')"><div class="svc-thumb" style="background:var(--orange-100);width:56px;height:56px">🔧</div>
+        <div><b style="font-size:13px">Servis AC Rumah</b><div class="muted" style="font-size:11.5px">Rp75rb – 150rb</div></div></div>
+      <div class="card svc-card" onclick="go('s-detail')"><div class="svc-thumb" style="background:var(--teal-100);width:56px;height:56px">❄️</div>
+        <div><b style="font-size:13px">Cuci Kulkas & Kompresor</b><div class="muted" style="font-size:11.5px">Rp120rb</div></div></div>
+    </div>
+    <div class="topbar" style="position:absolute"><div class="back" onclick="go('s-detail')" style="background:#fff">←</div></div>
+  </div>
+
+  <!-- BOOKING FORM -->
+  <div class="screen" id="s-booking">
+    <div class="topbar"><div class="back" onclick="go('s-detail')">←</div><div class="title">Ajukan Booking</div></div>
+    <div class="pad">
+      <div class="card" style="margin-bottom:16px"><div class="rowbetween mb-0"><b style="font-size:13.5px">Servis AC Rumah</b><b style="color:var(--orange-dark);font-size:13.5px">Rp75rb</b></div><div class="muted" style="font-size:11.5px">Budi Teknik · ⏱ 1–2 jam</div></div>
+      <div class="field"><label>Tanggal & waktu</label><input value="Sabtu, 28 Sep 2026 · 10:00" readonly></div>
+      <div class="field"><label>Catatan tambahan (opsional)</label><textarea rows="3">Unit AC di lantai 2, ada suara berisik.</textarea></div>
+      <div class="divider"></div>
+      <div class="rowbetween" style="font-size:14px;margin-bottom:4px"><span class="muted">Biaya jasa</span><span>Rp75.000</span></div>
+      <div class="rowbetween" style="font-size:14px;margin-bottom:14px"><span class="muted">Biaya layanan</span><span>Rp3.000</span></div>
+      <div class="rowbetween" style="font-size:16px;font-weight:700"><span>Total</span><span style="color:var(--orange-dark)">Rp78.000</span></div>
+    </div>
+    <div style="padding:14px 18px;background:var(--surface);border-top:1px solid var(--line)">
+      <button class="btn btn-primary" onclick="go('s-confirm')">Kirim Permintaan Booking</button>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div class="screen" id="s-confirm">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 30px;text-align:center">
+      <div style="width:76px;height:76px;border-radius:50%;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:18px">✅</div>
+      <h2 style="margin:0 0 8px">Booking terkirim!</h2>
+      <p class="muted" style="font-size:13.5px;margin:0 0 26px">Budi Teknik akan meninjau permintaanmu. Kamu akan diberi tahu setelah dikonfirmasi.</p>
+      <button class="btn btn-primary" onclick="go('s-status')">Lihat Status Booking</button>
+    </div>
+  </div>
+
+  <!-- BOOKING STATUS -->
+  <div class="screen" id="s-status">
+    <div class="topbar"><div class="back" onclick="go('s-booklist')">←</div><div class="title">Status Booking</div></div>
+    <div class="pad">
+      <div class="card" style="margin-bottom:18px"><div class="rowbetween mb-0"><b style="font-size:13.5px">Servis AC Rumah</b><span class="badge b-progress">Dikerjakan</span></div>
+        <div class="muted" style="font-size:11.5px;margin-top:4px">Budi Teknik · Sabtu, 28 Sep · 10:00</div></div>
+      <div class="stepper">
+        <div class="step done"><div class="dot">✓</div><div class="lbl">Menunggu</div></div>
+        <div class="step done"><div class="dot">✓</div><div class="lbl">Diterima</div></div>
+        <div class="step now"><div class="dot">3</div><div class="lbl">Dikerjakan</div></div>
+        <div class="step"><div class="dot">4</div><div class="lbl">Selesai</div></div>
+      </div>
+      <div class="divider"></div>
+      <p class="muted" style="font-size:13px">Teknisi sedang menuju lokasimu. Estimasi tiba 15 menit lagi.</p>
+    </div>
+    <div style="padding:14px 18px;display:flex;gap:10px">
+      <button class="btn btn-outline" onclick="go('s-chatroom')">Chat Provider</button>
+      <button class="btn btn-primary" onclick="go('s-review')">Selesaikan & Beri Ulasan</button>
+    </div>
+  </div>
+
+  <!-- BOOKING LIST -->
+  <div class="screen" id="s-booklist">
+    <div class="pad" style="padding-top:16px"><h2 style="margin:0 0 12px;font-size:19px">Bookingku</h2>
+      <div style="display:flex;gap:8px;margin-bottom:14px"><div class="chip active">Aktif</div><div class="chip">Riwayat</div></div>
+    </div>
+    <div class="pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" onclick="go('s-status')"><div class="rowbetween mb-0"><b style="font-size:13px">Servis AC Rumah</b><span class="badge b-progress">Dikerjakan</span></div><div class="muted" style="font-size:11.5px;margin-top:4px">Budi Teknik · 28 Sep, 10:00</div></div>
+      <div class="card"><div class="rowbetween mb-0"><b style="font-size:13px">Les Matematika</b><span class="badge b-pending">Menunggu</span></div><div class="muted" style="font-size:11.5px;margin-top:4px">Kak Dimas · 29 Sep, 16:00</div></div>
+      <div class="card"><div class="rowbetween mb-0"><b style="font-size:13px">Foto Produk UMKM</b><span class="badge b-accepted">Diterima</span></div><div class="muted" style="font-size:11.5px;margin-top:4px">Studio Cahaya · 30 Sep, 09:00</div></div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="nav-book"></div>
+  </div>
+</div></div>
+
+<!-- ================= FRAME 4: CHAT & REVIEWS ================= -->
+<div class="wrap"><div class="label">04 · Chat & Reviews</div>
+<div class="frame">
+  <div class="status"></div>
+  <!-- CHAT LIST -->
+  <div class="screen active" id="s-chatlist">
+    <div class="pad" style="padding-top:16px"><h2 style="margin:0 0 14px;font-size:19px">Pesan</h2></div>
+    <div class="pad" style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;gap:12px;padding:10px 0;cursor:pointer" onclick="go('s-chatroom')">
+        <div class="avatar" style="width:48px;height:48px">BT</div>
+        <div style="flex:1;border-bottom:1px solid var(--line);padding-bottom:10px">
+          <div class="rowbetween mb-0"><b style="font-size:13.5px">Budi Teknik</b><span class="muted" style="font-size:11px">10:24</span></div>
+          <div class="rowbetween mb-0"><span class="muted" style="font-size:12.5px">Baik pak, saya menuju lokasi ya</span>
+            <span style="background:var(--orange);color:#fff;font-size:10px;border-radius:10px;padding:1px 7px;font-weight:700">2</span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;padding:10px 0;cursor:pointer">
+        <div class="avatar" style="width:48px;height:48px">KD</div>
+        <div style="flex:1;border-bottom:1px solid var(--line);padding-bottom:10px">
+          <div class="rowbetween mb-0"><b style="font-size:13.5px">Kak Dimas</b><span class="muted" style="font-size:11px">Kemarin</span></div>
+          <div class="muted" style="font-size:12.5px">Oke, jadwal les hari Selasa ya!</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;padding:10px 0;cursor:pointer">
+        <div class="avatar" style="width:48px;height:48px">SC</div>
+        <div style="flex:1;border-bottom:1px solid var(--line);padding-bottom:10px">
+          <div class="rowbetween mb-0"><b style="font-size:13.5px">Studio Cahaya</b><span class="muted" style="font-size:11px">Sen</span></div>
+          <div class="muted" style="font-size:12.5px">Terima kasih sudah booking 🙏</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="nav-chat"></div>
+  </div>
+
+  <!-- CHAT ROOM -->
+  <div class="screen" id="s-chatroom">
+    <div class="topbar"><div class="back" onclick="go('s-chatlist')">←</div>
+      <div class="avatar" style="width:32px;height:32px;font-size:12px">BT</div><div class="title" style="font-size:14.5px">Budi Teknik</div></div>
+    <div style="flex:1;padding:14px 18px;display:flex;flex-direction:column">
+      <div class="msg-row"><div><div class="bubble">Halo, saya sudah terima booking servis AC-nya 👍</div><div class="msg-time">09:58</div></div></div>
+      <div class="msg-row me"><div><div class="bubble">Baik pak, saya di rumah dari jam 10.</div><div class="msg-time" style="text-align:right">10:01</div></div></div>
+      <div class="msg-row"><div><div class="bubble">Baik pak, saya menuju lokasi ya</div><div class="msg-time">10:24</div></div></div>
+    </div>
+    <div style="padding:10px 14px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;align-items:center">
+      <div style="font-size:20px;cursor:pointer">📎</div>
+      <input placeholder="Tulis pesan…" style="flex:1;border:1px solid var(--line);border-radius:20px;padding:10px 14px;font-size:13.5px;outline:none">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">➤</div>
+    </div>
+  </div>
+
+  <!-- REVIEW FORM -->
+  <div class="screen" id="s-review">
+    <div class="topbar"><div class="back" onclick="go('s-status')">←</div><div class="title">Beri Ulasan</div></div>
+    <div class="pad" style="text-align:center">
+      <div class="avatar" style="width:56px;height:56px;margin:6px auto 10px">BT</div>
+      <b style="font-size:14.5px">Servis AC Rumah</b><div class="muted" style="font-size:12px">Budi Teknik</div>
+      <div class="star-input"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span><span>★</span></div>
+    </div>
+    <div class="pad">
+      <div class="field"><label>Ceritakan pengalamanmu</label><textarea rows="4">Kerjanya cepat dan rapi, AC langsung dingin. Terima kasih!</textarea></div>
+      <button class="btn btn-primary" onclick="go('s-booklist')">Kirim Ulasan</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- ================= FRAME 5: PROFILE & ADMIN ================= -->
+<div class="wrap"><div class="label">05 · Profile & Admin</div>
+<div class="frame">
+  <div class="status"></div>
+  <!-- CUSTOMER PROFILE -->
+  <div class="screen active" id="s-profile">
+    <div class="pad" style="padding-top:20px;text-align:center">
+      <div class="avatar" style="width:76px;height:76px;font-size:24px;margin:0 auto 10px">RP</div>
+      <h2 style="margin:0;font-size:18px">Rani Puspita</h2>
+      <div class="muted" style="font-size:12.5px">+62 812-3456-7890</div>
+      <button class="btn btn-outline" style="width:auto;padding:8px 20px;margin-top:10px;font-size:12.5px">Edit Profil</button>
+    </div>
+    <div class="pad" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+      <div class="card rowbetween" onclick="go('s-booklist')"><span>📋 Booking Saya</span><span>›</span></div>
+      <div class="card rowbetween"><span>⭐ Ulasan Saya</span><span>›</span></div>
+      <div class="card rowbetween"><span>⚙️ Pengaturan</span><span>›</span></div>
+      <div class="card rowbetween"><span>❓ Bantuan</span><span>›</span></div>
+      <div class="card rowbetween" style="color:var(--danger)" onclick="go('s-login')"><span>🚪 Keluar</span><span>›</span></div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="nav-profile"></div>
+  </div>
+
+  <!-- PROVIDER SERVICES MGMT -->
+  <div class="screen" id="s-myservices">
+    <div class="topbar"><div class="back" onclick="go('s-profile')">←</div><div class="title">Layanan Saya</div></div>
+    <div class="pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="card svc-card"><div class="svc-thumb" style="background:var(--orange-100);width:56px;height:56px">🔧</div>
+        <div style="flex:1"><b style="font-size:13px">Servis AC Rumah</b><div class="muted" style="font-size:11.5px">Rp75rb–150rb</div></div>
+        <div style="font-size:16px">✏️</div></div>
+      <div class="card svc-card"><div class="svc-thumb" style="background:var(--teal-100);width:56px;height:56px">❄️</div>
+        <div style="flex:1"><b style="font-size:13px">Cuci Kulkas</b><div class="muted" style="font-size:11.5px">Rp120rb</div></div>
+        <div style="font-size:16px">✏️</div></div>
+      <button class="btn btn-outline">+ Tambah Layanan</button>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD (simplified mobile) -->
+  <div class="screen" id="s-admin">
+    <div class="pad" style="padding-top:18px"><h2 style="margin:0 0 14px;font-size:18px">Dashboard Admin</h2></div>
+    <div class="pad" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+      <div class="card"><div class="muted" style="font-size:11px">Total Pengguna</div><b style="font-size:20px">12.4rb</b></div>
+      <div class="card"><div class="muted" style="font-size:11px">Total Layanan</div><b style="font-size:20px">3.208</b></div>
+      <div class="card"><div class="muted" style="font-size:11px">Total Booking</div><b style="font-size:20px">9.021</b></div>
+      <div class="card" style="border:1px solid var(--danger)"><div class="muted" style="font-size:11px">Laporan Pending</div><b style="font-size:20px;color:var(--danger)">7</b></div>
+    </div>
+    <div class="section-title"><h3>Laporan Terbaru</h3><span>Filter ▾</span></div>
+    <div class="pad" style="display:flex;flex-direction:column;gap:8px">
+      <div class="card"><div class="rowbetween mb-0"><b style="font-size:13px">Provider spam chat</b><span class="badge b-pending">Pending</span></div>
+        <div class="muted" style="font-size:11.5px;margin:6px 0 8px">Dilaporkan oleh: Sinta W.</div>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost" style="padding:8px;font-size:12px">Abaikan</button><button class="btn btn-primary" style="padding:8px;font-size:12px;background:var(--danger)">Banned</button></div></div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="nav-admin"></div>
+  </div>
+</div></div>
+
+<!-- ================= FRAME 6: EMPTY & ERROR STATES ================= -->
+<div class="wrap"><div class="label">06 · Empty & Error States</div>
+<div class="frame">
+  <div class="status"></div>
+  <div class="screen active" id="s-empty" style="align-items:center;justify-content:center;text-align:center;padding:0 34px">
+    <div style="font-size:52px;margin-bottom:14px">🔍</div>
+    <h3 style="margin:0 0 6px">Tidak ada hasil</h3>
+    <p class="muted" style="font-size:13px;margin:0 0 18px">Coba ubah kata kunci atau perluas radius pencarianmu.</p>
+    <button class="btn btn-outline" style="width:auto;padding:10px 22px">Reset Filter</button>
+  </div>
+</div></div>
+
+<script>
+const ids=['s-login','s-register','s-reset','s-home','s-search','s-filter','s-detail','s-provider','s-booking','s-confirm','s-status','s-booklist','s-chatlist','s-chatroom','s-review','s-profile','s-myservices','s-admin','s-empty'];
+function go(id){
+  const el=document.getElementById(id);
+  const frame=el.closest('.frame');
+  frame.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  frame.scrollTop=0;
+  el.scrollTop=0;
+}
+function pickRole(el){el.parentElement.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function navBar(active){
+  const items=[['s-home','🏠','Beranda'],['s-search','🔎','Cari'],['s-booklist','📋','Booking'],['s-chatlist','💬','Chat'],['s-profile','👤','Profil']];
+  return `<div class="bottomnav">`+items.map(([id,ic,lb])=>`<div class="navitem ${id===active?'active':''}" onclick="go('${id}')"><span class="ic">${ic}</span>${lb}</div>`).join('')+`</div>`;
+}
+['nav-home','nav-search','nav-book','nav-chat','nav-profile','nav-admin'].forEach(k=>{
+  const map={'nav-home':'s-home','nav-search':'s-search','nav-book':'s-booklist','nav-chat':'s-chatlist','nav-profile':'s-profile','nav-admin':'s-profile'};
+  document.getElementById(k).outerHTML=navBar(map[k]);
+});
+</script>
+</body>
+</html>
