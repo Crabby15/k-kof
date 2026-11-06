@@ -1,5 +1,17 @@
 JasaDekat
 
+## MVP Pertemuan 7
+
+Demo alur utama: daftar/masuk akun demo, cari jasa dengan kata kunci dan kategori, buka form yang tervalidasi, simpan pesanan lokal, lalu lihat, ubah status, muat ulang, dan hapus pesanan. Beranda menyediakan navigasi Beranda, Pesanan, Chat, dan Profil; Chat menampilkan status bahwa percakapan tersedia setelah pesanan diterima.
+
+Fitur lanjutan yang dapat didemonstrasikan:
+
+- **Autentikasi demo**: formulir daftar/masuk memvalidasi nama, email, dan kata sandi. Ini memberi pengguna gerbang akun dan personalisasi sapaan. Akun demo disimpan di memori dan akan hilang saat aplikasi dimulai ulang; belum ada backend autentikasi.
+- **Lokasi perangkat**: tombol “Gunakan lokasi saya” meminta izin saat diperlukan, menangani layanan lokasi mati, penolakan, dan izin permanen ditolak, lalu menampilkan koordinat perkiraan untuk membantu pencarian jasa sekitar. Pengguna tetap dapat memakai aplikasi tanpa memberi izin. Android mendeklarasikan izin lokasi coarse/fine.
+- **Notifikasi dalam aplikasi**: setelah pesanan tersimpan, aplikasi mencatat notifikasi lokal pada penyimpanan perangkat dan halaman lonceng membacanya. Ini membantu pengguna mengingat bahwa permintaan menunggu konfirmasi. Tidak memerlukan izin push; belum mengirim push dari server.
+
+Status loading, empty, dan error serta tombol coba lagi tersedia pada pencarian dan pemilihan layanan. Form booking memvalidasi layanan dan tanggal; data booking tersimpan lokal melalui SharedPreferences. Lokasi memakai izin runtime perangkat. Untuk menjalankan: `flutter pub get`, lalu `flutter run` (atau `flutter run -d chrome`).
+
 ## Local Data & Persistence (demo reviewer)
 
 Alur vertikal yang memakai penyimpanan lokal adalah **Booking/Pesanan** (Flutter `shared_preferences`, key `jasa_dekat.bookings.v1`, JSON versioned). Data tersimpan di device, terpisah dari session login demo.

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'features/booking/presentation/booking_page.dart';
 import 'features/booking/presentation/booking_list_page.dart';
 import 'features/services/data/service_repository.dart';
+import 'features/services/application/service_providers.dart';
 import 'features/services/domain/service_item.dart';
 import 'features/services/presentation/service_search_page.dart';
 import 'features/services/presentation/service_visuals.dart';
+import 'features/notifications/notification_page.dart';
 
 const _ink = Color(0xFF182B49);
 const _blue = Color(0xFF315FEA);
@@ -326,6 +330,53 @@ class HomePage extends StatelessWidget {
   const HomePage({super.key, required this.name});
   final String name;
 
+  Future<void> _showLocation(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+        const SnackBar(content: Text('Memeriksa izin dan lokasi...')));
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Layanan lokasi mati. Aktifkan lokasi atau lanjutkan tanpa lokasi.')));
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        messenger.showSnackBar(const SnackBar(
+            content:
+                Text('Izin lokasi ditolak. Kamu tetap bisa mencari jasa.')));
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Izin lokasi diblokir. Ubah izin aplikasi di Pengaturan.')));
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 12)),
+      );
+      if (!context.mounted) {
+        return;
+      }
+      messenger.showSnackBar(SnackBar(
+          content: Text(
+              'Lokasi ditemukan (${position.latitude.toStringAsFixed(3)}, ${position.longitude.toStringAsFixed(3)}). Digunakan untuk mencari jasa sekitar.')));
+    } catch (_) {
+      if (context.mounted) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Lokasi tidak tersedia saat ini. Coba lagi atau lanjutkan tanpa lokasi.')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
@@ -336,7 +387,10 @@ class HomePage extends StatelessWidget {
                 const _Brand(),
                 const Spacer(),
                 IconButton(
-                    onPressed: () {},
+                    tooltip: 'Notifikasi',
+                    onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                            builder: (_) => const NotificationPage())),
                     icon: const Icon(Icons.notifications_none_rounded)),
                 PopupMenuButton<String>(
                   tooltip: 'Akun',
@@ -381,7 +435,19 @@ class HomePage extends StatelessWidget {
                   hintText: 'Cari jasa yang kamu butuhkan',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: IconButton(
-                      onPressed: () {}, icon: const Icon(Icons.tune_rounded)),
+                      onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                                builder: (_) => const ServiceSearchPage()),
+                          ),
+                      icon: const Icon(Icons.tune_rounded)),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _showLocation(context),
+                  icon: const Icon(Icons.my_location_outlined),
+                  label: const Text('Gunakan lokasi saya'),
                 ),
               ),
               const SizedBox(height: 22),
@@ -436,24 +502,22 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 14),
               SizedBox(
                 height: 99,
-                child:
-                    ListView(scrollDirection: Axis.horizontal, children: const [
+                child: ListView(scrollDirection: Axis.horizontal, children: [
                   _Category(
                       icon: Icons.laptop_mac_rounded,
                       label: 'Teknologi',
-                      color: Color(0xFFE8EEFF)),
+                      color: const Color(0xFFE8EEFF),
+                      onTap: () => _openCategory(context, 'Teknologi')),
                   _Category(
                       icon: Icons.menu_book_rounded,
                       label: 'Pendidikan',
-                      color: Color(0xFFFFF1DF)),
+                      color: const Color(0xFFFFF1DF),
+                      onTap: () => _openCategory(context, 'Pendidikan')),
                   _Category(
                       icon: Icons.brush_rounded,
                       label: 'Desain',
-                      color: Color(0xFFFFE9ED)),
-                  _Category(
-                      icon: Icons.home_repair_service_rounded,
-                      label: 'Rumah',
-                      color: Color(0xFFE6F7EF)),
+                      color: const Color(0xFFFFE9ED),
+                      onTap: () => _openCategory(context, 'Desain')),
                 ]),
               ),
               const SizedBox(height: 22),
@@ -473,6 +537,17 @@ class HomePage extends StatelessWidget {
               Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => const BookingListPage(),
               ));
+            } else if (index == 2) {
+              Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const _InfoPage(
+                    title: 'Chat',
+                    message:
+                        'Chat tersedia setelah penyedia menerima pesananmu.'),
+              ));
+            } else if (index == 3) {
+              Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => _InfoPage(title: 'Profil', message: name),
+              ));
             }
           },
           destinations: const [
@@ -491,27 +566,68 @@ class HomePage extends StatelessWidget {
       );
 }
 
+void _openCategory(BuildContext context, String category) {
+  ProviderScope.containerOf(context)
+      .read(serviceCategoryProvider.notifier)
+      .state = category;
+  Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (_) => const ServiceSearchPage(),
+  ));
+}
+
+class _InfoPage extends StatelessWidget {
+  const _InfoPage({required this.title, required this.message});
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(
+                  title == 'Chat'
+                      ? Icons.chat_bubble_outline
+                      : Icons.person_outline,
+                  size: 48),
+              const SizedBox(height: 12),
+              Text(message, textAlign: TextAlign.center),
+            ]),
+          ),
+        ),
+      );
+}
+
 class _Category extends StatelessWidget {
   const _Category(
-      {required this.icon, required this.label, required this.color});
+      {required this.icon,
+      required this.label,
+      required this.color,
+      this.onTap});
   final IconData icon;
   final String label;
   final Color color;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) => SizedBox(
         width: 82,
-        child: Column(children: [
-          Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                  color: color, borderRadius: BorderRadius.circular(18)),
-              child: Icon(icon, color: _ink)),
-          const SizedBox(height: 7),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-        ]),
+        child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Column(children: [
+              Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                      color: color, borderRadius: BorderRadius.circular(18)),
+                  child: Icon(icon, color: _ink)),
+              const SizedBox(height: 7),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600)),
+            ])),
       );
 }
 

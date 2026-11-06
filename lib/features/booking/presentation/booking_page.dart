@@ -5,6 +5,7 @@ import '../../services/application/service_providers.dart';
 import '../../services/domain/service_item.dart';
 import '../application/booking_submit_provider.dart';
 import '../domain/booking_request.dart';
+import '../../notifications/notification_page.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({super.key, this.initialService});
@@ -55,6 +56,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         const SnackBar(content: Text('Pesanan gagal dikirim. Coba lagi.')),
       );
     } else {
+      try {
+        await saveBookingNotification(service.title);
+      } catch (_) {
+        // The booking is already saved; a notification failure must not hide it.
+      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Permintaan booking berhasil dikirim.')),
       );
