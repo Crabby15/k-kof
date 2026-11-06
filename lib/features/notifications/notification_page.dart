@@ -43,32 +43,44 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Notifikasi')),
-        body: FutureBuilder<List<String>>(
-          future: _notices,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              if (snapshot.hasError) {
-                return const Center(child: Text('Notifikasi gagal dimuat.'));
-              }
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.data!.isEmpty) {
-              return const Center(child: Text('Belum ada notifikasi.'));
-            }
-            return ListView(
-              children: snapshot.data!.map((raw) {
-                final notice = jsonDecode(raw) as Map<String, dynamic>;
-                return ListTile(
-                  leading:
-                      const CircleAvatar(child: Icon(Icons.event_available)),
-                  title: Text(notice['title'] as String),
-                  subtitle: Text(
-                      '${notice['body']}\n${DateTime.parse(notice['time'] as String).toLocal()}'),
-                  isThreeLine: true,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: FutureBuilder<List<String>>(
+              future: _notices,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  if (snapshot.hasError) {
+                    return const Center(
+                        child: Text('Notifikasi gagal dimuat.'));
+                  }
+                  return const Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 12),
+                      Text('Memuat notifikasi...'),
+                    ]),
+                  );
+                }
+                if (snapshot.data!.isEmpty) {
+                  return const Center(child: Text('Belum ada notifikasi.'));
+                }
+                return ListView(
+                  children: snapshot.data!.map((raw) {
+                    final notice = jsonDecode(raw) as Map<String, dynamic>;
+                    return ListTile(
+                      leading: const CircleAvatar(
+                          child: Icon(Icons.event_available)),
+                      title: Text(notice['title'] as String),
+                      subtitle: Text(
+                          '${notice['body']}\n${DateTime.parse(notice['time'] as String).toLocal()}'),
+                      isThreeLine: true,
+                    );
+                  }).toList(),
                 );
-              }).toList(),
-            );
-          },
+              },
+            ),
+          ),
         ),
       );
 }

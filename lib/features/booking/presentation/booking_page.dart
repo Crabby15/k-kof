@@ -68,6 +68,27 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     }
   }
 
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final existing = DateTime.tryParse(_dateController.text);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: existing != null &&
+              !existing.isBefore(DateTime(now.year, now.month, now.day))
+          ? existing
+          : now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 2),
+      helpText: 'Pilih tanggal pengerjaan',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+    if (picked == null || !mounted) return;
+    _dateController.text =
+        '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    _formKey.currentState?.validate();
+  }
+
   @override
   Widget build(BuildContext context) {
     final services = ref.watch(serviceSearchProvider);
@@ -76,121 +97,139 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Buat pesanan')),
-      body: services.when(
-        loading: () => const Center(
-          key: Key('booking-loading'),
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stack) => _BookingError(
-          onRetry: () => ref.read(serviceSearchProvider.notifier).retry(),
-        ),
-        data: (items) {
-          if (items.isEmpty) return const _BookingEmpty();
-          final selectedIsAvailable =
-              items.any((item) => item.id == _selectedService?.id);
-          final selected = selectedIsAvailable ? _selectedService : null;
-          return Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(22),
-              children: [
-                const Text(
-                  'Ceritakan kebutuhanmu',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 6),
-                const Text('Pilih layanan dan waktu yang kamu inginkan.'),
-                const SizedBox(height: 24),
-                DropdownButtonFormField<ServiceItem>(
-                  key: const Key('booking-service-field'),
-                  initialValue: selected,
-                  decoration: const InputDecoration(
-                    labelText: 'Layanan',
-                    prefixIcon: Icon(Icons.handyman_outlined),
-                  ),
-                  items: items
-                      .map((service) => DropdownMenuItem(
-                            value: service,
-                            child: Text(service.title),
-                          ))
-                      .toList(),
-                  onChanged: isSubmitting
-                      ? null
-                      : (service) => setState(() => _selectedService = service),
-                  validator: (value) => value == null ? 'Pilih layanan' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('booking-date-field'),
-                  controller: _dateController,
-                  enabled: !isSubmitting,
-                  keyboardType: TextInputType.datetime,
-                  decoration: const InputDecoration(
-                    labelText: 'Tanggal pengerjaan',
-                    hintText: 'YYYY-MM-DD',
-                    prefixIcon: Icon(Icons.calendar_month_outlined),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Tanggal wajib diisi';
-                    }
-                    if (DateTime.tryParse(value) == null) {
-                      return 'Gunakan format tanggal YYYY-MM-DD';
-                    }
-                    final selectedDate = DateTime.parse(value);
-                    final today = DateTime.now();
-                    final todayStart =
-                        DateTime(today.year, today.month, today.day);
-                    if (selectedDate.isBefore(todayStart)) {
-                      return 'Tanggal tidak boleh di masa lalu';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('booking-note-field'),
-                  controller: _noteController,
-                  minLines: 3,
-                  maxLines: 5,
-                  maxLength: 300,
-                  enabled: !isSubmitting,
-                  decoration: const InputDecoration(
-                    labelText: 'Catatan kebutuhan',
-                    hintText:
-                        'Jelaskan detail yang perlu diketahui penyedia jasa',
-                    alignLabelWithHint: true,
-                  ),
-                  validator: (value) => value != null && value.length > 300
-                      ? 'Maksimal 300 karakter'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  key: const Key('booking-submit-button'),
-                  onPressed: isSubmitting ? null : _submit,
-                  icon: isSubmitting
-                      ? const SizedBox(
-                          key: Key('booking-submit-loading'),
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_rounded),
-                  label: Text(isSubmitting
-                      ? 'Mengirim pesanan...'
-                      : 'Kirim permintaan'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                ),
-              ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: services.when(
+            loading: () => const Center(
+              key: Key('booking-loading'),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 12),
+                Text('Memuat pilihan layanan...'),
+              ]),
             ),
-          );
-        },
+            error: (error, stack) => _BookingError(
+              onRetry: () => ref.read(serviceSearchProvider.notifier).retry(),
+            ),
+            data: (items) {
+              if (items.isEmpty) return const _BookingEmpty();
+              final selectedIsAvailable =
+                  items.any((item) => item.id == _selectedService?.id);
+              final selected = selectedIsAvailable ? _selectedService : null;
+              return Form(
+                key: _formKey,
+                child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.all(22),
+                  children: [
+                    const Text(
+                      'Ceritakan kebutuhanmu',
+                      style:
+                          TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text('Pilih layanan dan waktu yang kamu inginkan.'),
+                    const SizedBox(height: 24),
+                    DropdownButtonFormField<ServiceItem>(
+                      key: const Key('booking-service-field'),
+                      initialValue: selected,
+                      decoration: const InputDecoration(
+                        labelText: 'Layanan',
+                        prefixIcon: Icon(Icons.handyman_outlined),
+                      ),
+                      items: items
+                          .map((service) => DropdownMenuItem(
+                                value: service,
+                                child: Text(service.title),
+                              ))
+                          .toList(),
+                      onChanged: isSubmitting
+                          ? null
+                          : (service) =>
+                              setState(() => _selectedService = service),
+                      validator: (value) =>
+                          value == null ? 'Pilih layanan' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const Key('booking-date-field'),
+                      controller: _dateController,
+                      enabled: !isSubmitting,
+                      readOnly: true,
+                      onTap: isSubmitting ? null : _pickDate,
+                      scrollPadding: const EdgeInsets.all(32),
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal pengerjaan',
+                        hintText: 'YYYY-MM-DD',
+                        prefixIcon: Icon(Icons.calendar_month_outlined),
+                        suffixIcon: Icon(Icons.arrow_drop_down),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Tanggal wajib diisi';
+                        }
+                        if (DateTime.tryParse(value) == null) {
+                          return 'Gunakan format tanggal YYYY-MM-DD';
+                        }
+                        final selectedDate = DateTime.parse(value);
+                        final today = DateTime.now();
+                        final todayStart =
+                            DateTime(today.year, today.month, today.day);
+                        if (selectedDate.isBefore(todayStart)) {
+                          return 'Tanggal tidak boleh di masa lalu';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const Key('booking-note-field'),
+                      controller: _noteController,
+                      minLines: 3,
+                      maxLines: 5,
+                      maxLength: 300,
+                      enabled: !isSubmitting,
+                      scrollPadding: const EdgeInsets.all(32),
+                      decoration: const InputDecoration(
+                        labelText: 'Catatan kebutuhan',
+                        hintText:
+                            'Jelaskan detail yang perlu diketahui penyedia jasa',
+                        alignLabelWithHint: true,
+                      ),
+                      validator: (value) => value != null && value.length > 300
+                          ? 'Maksimal 300 karakter'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      key: const Key('booking-submit-button'),
+                      onPressed: isSubmitting ? null : _submit,
+                      icon: isSubmitting
+                          ? const SizedBox(
+                              key: Key('booking-submit-loading'),
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded),
+                      label: Text(isSubmitting
+                          ? 'Mengirim pesanan...'
+                          : 'Kirim permintaan'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

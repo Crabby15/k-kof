@@ -110,135 +110,154 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _Brand(),
-                  const SizedBox(height: 42),
-                  Text(
+        child: LayoutBuilder(
+          builder: (context, constraints) => Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth < 480 ? 20 : 32,
+                vertical: 24,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _Brand(),
+                    const SizedBox(height: 42),
+                    Text(
+                        _isLogin
+                            ? 'Temukan bantuan\ndi dekatmu.'
+                            : 'Mulai bersama\nJasaDekat.',
+                        style: const TextStyle(
+                            color: _ink,
+                            fontSize: 32,
+                            height: 1.15,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 10),
+                    Text(
                       _isLogin
-                          ? 'Temukan bantuan\ndi dekatmu.'
-                          : 'Mulai bersama\nJasaDekat.',
+                          ? 'Masuk dan temukan jasa lokal yang kamu butuhkan.'
+                          : 'Buat akun untuk mencari atau menawarkan jasa.',
                       style: const TextStyle(
-                          color: _ink,
-                          fontSize: 32,
-                          height: 1.15,
-                          fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 10),
-                  Text(
-                    _isLogin
-                        ? 'Masuk dan temukan jasa lokal yang kamu butuhkan.'
-                        : 'Buat akun untuk mencari atau menawarkan jasa.',
-                    style:
-                        const TextStyle(color: Color(0xFF718096), fontSize: 15),
-                  ),
-                  const SizedBox(height: 28),
-                  _AuthSwitch(
-                      isLogin: _isLogin,
-                      onChanged: (value) {
-                        setState(() => _isLogin = value);
-                      }),
-                  const SizedBox(height: 24),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (!_isLogin) ...[
-                          const _FieldLabel('Nama lengkap'),
+                          color: Color(0xFF718096), fontSize: 15),
+                    ),
+                    const SizedBox(height: 28),
+                    _AuthSwitch(
+                        isLogin: _isLogin,
+                        onChanged: (value) {
+                          setState(() => _isLogin = value);
+                        }),
+                    const SizedBox(height: 24),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (!_isLogin) ...[
+                            const _FieldLabel('Nama lengkap'),
+                            TextFormField(
+                              controller: _name,
+                              textInputAction: TextInputAction.next,
+                              scrollPadding: const EdgeInsets.all(32),
+                              textCapitalization: TextCapitalization.words,
+                              decoration: const InputDecoration(
+                                  labelText: 'Nama lengkap',
+                                  hintText: 'Contoh: Nadia Putri'),
+                              validator: (value) =>
+                                  value == null || value.trim().isEmpty
+                                      ? 'Nama wajib diisi'
+                                      : null,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          const _FieldLabel('Email'),
                           TextFormField(
-                            controller: _name,
-                            textCapitalization: TextCapitalization.words,
+                            controller: _email,
+                            textInputAction: TextInputAction.next,
+                            scrollPadding: const EdgeInsets.all(32),
+                            keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
-                                hintText: 'Contoh: Nadia Putri'),
-                            validator: (value) =>
-                                value == null || value.trim().isEmpty
-                                    ? 'Nama wajib diisi'
-                                    : null,
+                              labelText: 'Email',
+                              hintText: 'nama@email.com',
+                              prefixIcon: Icon(Icons.mail_outline_rounded),
+                            ),
+                            validator: (value) {
+                              if (value == null || !value.contains('@')) {
+                                return 'Masukkan email yang valid';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
+                          const _FieldLabel('Kata sandi'),
+                          TextFormField(
+                            controller: _password,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _submit(),
+                            scrollPadding: const EdgeInsets.all(32),
+                            obscureText: _hidePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Kata sandi',
+                              hintText: 'Minimal 6 karakter',
+                              prefixIcon:
+                                  const Icon(Icons.lock_outline_rounded),
+                              suffixIcon: IconButton(
+                                tooltip: _hidePassword
+                                    ? 'Tampilkan kata sandi'
+                                    : 'Sembunyikan kata sandi',
+                                onPressed: () => setState(
+                                    () => _hidePassword = !_hidePassword),
+                                icon: Icon(_hidePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined),
+                              ),
+                            ),
+                            validator: (value) =>
+                                value == null || value.length < 6
+                                    ? 'Gunakan minimal 6 karakter'
+                                    : null,
+                          ),
+                          if (_isLogin)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () => _message(
+                                    'Hubungkan reset password saat backend tersedia.'),
+                                child: const Text('Lupa kata sandi?'),
+                              ),
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(top: 12),
+                              child: Text(
+                                  'Dengan mendaftar, kamu menyetujui ketentuan penggunaan JasaDekat.',
+                                  style: TextStyle(
+                                      color: Color(0xFF718096), fontSize: 12)),
+                            ),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: _submit,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _blue,
+                              minimumSize: const Size.fromHeight(54),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: Text(_isLogin ? 'Masuk' : 'Buat akun',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w700)),
+                          ),
                         ],
-                        const _FieldLabel('Email'),
-                        TextFormField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            hintText: 'nama@email.com',
-                            prefixIcon: Icon(Icons.mail_outline_rounded),
-                          ),
-                          validator: (value) {
-                            if (value == null || !value.contains('@')) {
-                              return 'Masukkan email yang valid';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        const _FieldLabel('Kata sandi'),
-                        TextFormField(
-                          controller: _password,
-                          obscureText: _hidePassword,
-                          decoration: InputDecoration(
-                            hintText: 'Minimal 6 karakter',
-                            prefixIcon: const Icon(Icons.lock_outline_rounded),
-                            suffixIcon: IconButton(
-                              onPressed: () => setState(
-                                  () => _hidePassword = !_hidePassword),
-                              icon: Icon(_hidePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined),
-                            ),
-                          ),
-                          validator: (value) =>
-                              value == null || value.length < 6
-                                  ? 'Gunakan minimal 6 karakter'
-                                  : null,
-                        ),
-                        if (_isLogin)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () => _message(
-                                  'Hubungkan reset password saat backend tersedia.'),
-                              child: const Text('Lupa kata sandi?'),
-                            ),
-                          )
-                        else
-                          const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: Text(
-                                'Dengan mendaftar, kamu menyetujui ketentuan penggunaan JasaDekat.',
-                                style: TextStyle(
-                                    color: Color(0xFF718096), fontSize: 12)),
-                          ),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _blue,
-                            minimumSize: const Size.fromHeight(54),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text(_isLogin ? 'Masuk' : 'Buat akun',
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w700)),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Center(
-                    child: Text('Jasa lokal, lebih dekat dan terpercaya.',
-                        style:
-                            TextStyle(color: Color(0xFF718096), fontSize: 13)),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    const Center(
+                      child: Text('Jasa lokal, lebih dekat dan terpercaya.',
+                          style: TextStyle(
+                              color: Color(0xFF718096), fontSize: 13)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -305,22 +324,27 @@ class _AuthTab extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Expanded(
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: selected ? Colors.white : Colors.transparent,
-              borderRadius: BorderRadius.circular(11),
-              boxShadow: selected
-                  ? const [BoxShadow(color: Color(0x11000000), blurRadius: 8)]
-                  : null,
+        child: Semantics(
+          button: true,
+          selected: selected,
+          label: label,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: selected ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(11),
+                boxShadow: selected
+                    ? const [BoxShadow(color: Color(0x11000000), blurRadius: 8)]
+                    : null,
+              ),
+              child: Center(
+                  child: Text(label,
+                      style: TextStyle(
+                          color: selected ? _ink : const Color(0xFF718096),
+                          fontWeight: FontWeight.w700))),
             ),
-            child: Center(
-                child: Text(label,
-                    style: TextStyle(
-                        color: selected ? _ink : const Color(0xFF718096),
-                        fontWeight: FontWeight.w700))),
           ),
         ),
       );
@@ -380,154 +404,165 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-            children: [
-              Row(children: [
-                const _Brand(),
-                const Spacer(),
-                IconButton(
-                    tooltip: 'Notifikasi',
-                    onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                            builder: (_) => const NotificationPage())),
-                    icon: const Icon(Icons.notifications_none_rounded)),
-                PopupMenuButton<String>(
-                  tooltip: 'Akun',
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute<void>(
-                            builder: (_) => const AuthPage()),
-                        (route) => false,
-                      );
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'logout', child: Text('Keluar'))
-                  ],
-                  child: CircleAvatar(
-                      backgroundColor: const Color(0xFFE8EEFF),
-                      child: Text(name.isEmpty ? 'J' : name[0].toUpperCase(),
-                          style: const TextStyle(
-                              color: _blue, fontWeight: FontWeight.bold))),
-                ),
-              ]),
-              const SizedBox(height: 30),
-              Text('Halo, $name 👋',
-                  style:
-                      const TextStyle(fontSize: 15, color: Color(0xFF718096))),
-              const SizedBox(height: 6),
-              const Text('Butuh bantuan apa\nhari ini?',
-                  style: TextStyle(
-                      fontSize: 30,
-                      height: 1.15,
-                      fontWeight: FontWeight.w800,
-                      color: _ink)),
-              const SizedBox(height: 20),
-              TextField(
-                readOnly: true,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                      builder: (_) => const ServiceSearchPage()),
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Cari jasa yang kamu butuhkan',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: IconButton(
-                      onPressed: () => Navigator.of(context).push(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+                children: [
+                  Row(children: [
+                    const _Brand(),
+                    const Spacer(),
+                    IconButton(
+                        tooltip: 'Notifikasi',
+                        onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                                builder: (_) => const ServiceSearchPage()),
-                          ),
-                      icon: const Icon(Icons.tune_rounded)),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => _showLocation(context),
-                  icon: const Icon(Icons.my_location_outlined),
-                  label: const Text('Gunakan lokasi saya'),
-                ),
-              ),
-              const SizedBox(height: 22),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const BookingPage()),
-                ),
-                icon: const Icon(Icons.event_available_outlined),
-                label: const Text('Buat pesanan jasa'),
-                style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48)),
-              ),
-              const SizedBox(height: 22),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                    color: _blue, borderRadius: BorderRadius.circular(20)),
-                child: const Row(children: [
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text('Punya keahlian?',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold)),
-                        SizedBox(height: 6),
-                        Text(
-                            'Tawarkan jasamu dan temukan pelanggan di sekitarmu.',
-                            style: TextStyle(
-                                color: Color(0xFFE1E8FF), height: 1.4)),
-                      ])),
-                  SizedBox(width: 10),
-                  Icon(Icons.work_outline_rounded,
-                      color: Colors.white, size: 40),
-                ]),
-              ),
-              const SizedBox(height: 26),
-              const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Kategori populer',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: _ink)),
-                    Text('Lihat semua',
-                        style: TextStyle(
-                            color: _blue, fontWeight: FontWeight.w600)),
+                                builder: (_) => const NotificationPage())),
+                        icon: const Icon(Icons.notifications_none_rounded)),
+                    PopupMenuButton<String>(
+                      tooltip: 'Akun',
+                      onSelected: (value) {
+                        if (value == 'logout') {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute<void>(
+                                builder: (_) => const AuthPage()),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'logout', child: Text('Keluar'))
+                      ],
+                      child: CircleAvatar(
+                          backgroundColor: const Color(0xFFE8EEFF),
+                          child: Text(
+                              name.isEmpty ? 'J' : name[0].toUpperCase(),
+                              style: const TextStyle(
+                                  color: _blue, fontWeight: FontWeight.bold))),
+                    ),
                   ]),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 99,
-                child: ListView(scrollDirection: Axis.horizontal, children: [
-                  _Category(
-                      icon: Icons.laptop_mac_rounded,
-                      label: 'Teknologi',
-                      color: const Color(0xFFE8EEFF),
-                      onTap: () => _openCategory(context, 'Teknologi')),
-                  _Category(
-                      icon: Icons.menu_book_rounded,
-                      label: 'Pendidikan',
-                      color: const Color(0xFFFFF1DF),
-                      onTap: () => _openCategory(context, 'Pendidikan')),
-                  _Category(
-                      icon: Icons.brush_rounded,
-                      label: 'Desain',
-                      color: const Color(0xFFFFE9ED),
-                      onTap: () => _openCategory(context, 'Desain')),
-                ]),
+                  const SizedBox(height: 30),
+                  Text('Halo, $name 👋',
+                      style: const TextStyle(
+                          fontSize: 15, color: Color(0xFF718096))),
+                  const SizedBox(height: 6),
+                  const Text('Butuh bantuan apa\nhari ini?',
+                      style: TextStyle(
+                          fontSize: 30,
+                          height: 1.15,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  const SizedBox(height: 20),
+                  TextField(
+                    readOnly: true,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                          builder: (_) => const ServiceSearchPage()),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Cari jasa yang kamu butuhkan',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: IconButton(
+                          tooltip: 'Filter layanan',
+                          onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                    builder: (_) => const ServiceSearchPage()),
+                              ),
+                          icon: const Icon(Icons.tune_rounded)),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => _showLocation(context),
+                      icon: const Icon(Icons.my_location_outlined),
+                      label: const Text('Gunakan lokasi saya'),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                          builder: (_) => const BookingPage()),
+                    ),
+                    icon: const Icon(Icons.event_available_outlined),
+                    label: const Text('Buat pesanan jasa'),
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48)),
+                  ),
+                  const SizedBox(height: 22),
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                        color: _blue, borderRadius: BorderRadius.circular(20)),
+                    child: const Row(children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Punya keahlian?',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold)),
+                            SizedBox(height: 6),
+                            Text(
+                                'Tawarkan jasamu dan temukan pelanggan di sekitarmu.',
+                                style: TextStyle(
+                                    color: Color(0xFFE1E8FF), height: 1.4)),
+                          ])),
+                      SizedBox(width: 10),
+                      Icon(Icons.work_outline_rounded,
+                          color: Colors.white, size: 40),
+                    ]),
+                  ),
+                  const SizedBox(height: 26),
+                  const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Kategori populer',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: _ink)),
+                        Text('Lihat semua',
+                            style: TextStyle(
+                                color: _blue, fontWeight: FontWeight.w600)),
+                      ]),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 99,
+                    child:
+                        ListView(scrollDirection: Axis.horizontal, children: [
+                      _Category(
+                          icon: Icons.laptop_mac_rounded,
+                          label: 'Teknologi',
+                          color: const Color(0xFFE8EEFF),
+                          onTap: () => _openCategory(context, 'Teknologi')),
+                      _Category(
+                          icon: Icons.menu_book_rounded,
+                          label: 'Pendidikan',
+                          color: const Color(0xFFFFF1DF),
+                          onTap: () => _openCategory(context, 'Pendidikan')),
+                      _Category(
+                          icon: Icons.brush_rounded,
+                          label: 'Desain',
+                          color: const Color(0xFFFFE9ED),
+                          onTap: () => _openCategory(context, 'Desain')),
+                    ]),
+                  ),
+                  const SizedBox(height: 22),
+                  const Text('Rekomendasi untukmu',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  const SizedBox(height: 12),
+                  for (final service in demoServices)
+                    _ServiceCard(service: service),
+                ],
               ),
-              const SizedBox(height: 22),
-              const Text('Rekomendasi untukmu',
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w800, color: _ink)),
-              const SizedBox(height: 12),
-              for (final service in demoServices)
-                _ServiceCard(service: service),
-            ],
+            ),
           ),
         ),
         bottomNavigationBar: NavigationBar(

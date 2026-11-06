@@ -22,7 +22,11 @@ class ServiceSearchPage extends ConsumerWidget {
       body: services.when(
         loading: () => const Center(
           key: Key('search-loading'),
-          child: CircularProgressIndicator(),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 12),
+            Text('Memuat daftar jasa...'),
+          ]),
         ),
         error: (error, stack) => _SearchError(
           onRetry: () => ref.read(serviceSearchProvider.notifier).retry(),
@@ -37,41 +41,52 @@ class ServiceSearchPage extends ConsumerWidget {
             return matchesQuery && matchesCategory;
           }).toList();
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              TextField(
-                key: const Key('search-input'),
-                onChanged: (value) =>
-                    ref.read(serviceSearchQueryProvider.notifier).state = value,
-                decoration: const InputDecoration(
-                  hintText: 'Cari layanan atau kategori',
-                  prefixIcon: Icon(Icons.search_rounded),
-                ),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 880),
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.all(20),
+                children: [
+                  TextField(
+                    key: const Key('search-input'),
+                    textInputAction: TextInputAction.search,
+                    scrollPadding: const EdgeInsets.all(32),
+                    onChanged: (value) => ref
+                        .read(serviceSearchQueryProvider.notifier)
+                        .state = value,
+                    decoration: const InputDecoration(
+                      hintText: 'Cari layanan atau kategori',
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    children: categories.map((label) {
+                      final selected = label == 'Semua'
+                          ? category == null
+                          : category == label;
+                      return ChoiceChip(
+                        label: Text(label),
+                        selected: selected,
+                        onSelected: (_) {
+                          ref.read(serviceCategoryProvider.notifier).state =
+                              label == 'Semua' ? null : label;
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 18),
+                  if (filtered.isEmpty)
+                    const _SearchEmpty()
+                  else
+                    for (final service in filtered)
+                      _SearchServiceCard(service: service),
+                ],
               ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                children: categories.map((label) {
-                  final selected =
-                      label == 'Semua' ? category == null : category == label;
-                  return ChoiceChip(
-                    label: Text(label),
-                    selected: selected,
-                    onSelected: (_) {
-                      ref.read(serviceCategoryProvider.notifier).state =
-                          label == 'Semua' ? null : label;
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 18),
-              if (filtered.isEmpty)
-                const _SearchEmpty()
-              else
-                for (final service in filtered)
-                  _SearchServiceCard(service: service),
-            ],
+            ),
           );
         },
       ),
