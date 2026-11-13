@@ -1,0 +1,7 @@
+services:
+  jasadekat:
+    build: .
+    container_name: jasadekat-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"

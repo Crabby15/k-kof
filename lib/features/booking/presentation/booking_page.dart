@@ -56,15 +56,14 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         const SnackBar(content: Text('Pesanan gagal dikirim. Coba lagi.')),
       );
     } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permintaan booking berhasil dikirim.')),
+      );
       try {
         await saveBookingNotification(service.title);
       } catch (_) {
         // The booking is already saved; a notification failure must not hide it.
       }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permintaan booking berhasil dikirim.')),
-      );
     }
   }
 
@@ -157,14 +156,16 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                       key: const Key('booking-date-field'),
                       controller: _dateController,
                       enabled: !isSubmitting,
-                      readOnly: true,
-                      onTap: isSubmitting ? null : _pickDate,
                       scrollPadding: const EdgeInsets.all(32),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Tanggal pengerjaan',
                         hintText: 'YYYY-MM-DD',
                         prefixIcon: Icon(Icons.calendar_month_outlined),
-                        suffixIcon: Icon(Icons.arrow_drop_down),
+                        suffixIcon: IconButton(
+                          tooltip: 'Pilih tanggal',
+                          onPressed: isSubmitting ? null : _pickDate,
+                          icon: const Icon(Icons.arrow_drop_down),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
